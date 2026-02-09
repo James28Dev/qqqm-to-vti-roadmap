@@ -1,0 +1,28 @@
+name: Daily RSI Alert Bot
+
+on:
+  schedule:
+    # รันเวลา 21:30 UTC ซึ่งตรงกับ 04:30 น. เวลาไทย (จันทร์-ศุกร์) [cite: 2026-02-04]
+    - cron: '30 21 * * 1-5'
+  workflow_dispatch: # ปุ่มสำหรับกดรันเองเพื่อ Test
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Libraries
+        run: pip install -r requirements.txt
+
+      - name: Execute Sentinel
+        env:
+          LINE_ACCESS_TOKEN: ${{ secrets.LINE_ACCESS_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: python main.py
