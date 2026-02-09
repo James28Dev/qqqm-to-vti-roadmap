@@ -1,32 +1,36 @@
 import yfinance as yf
-import pandas_ta as ta
+import pandas as pd
 import requests
 import os
 
-# รายการหุ้นที่คุณถือและเฝ้าจังหวะ [cite: 2026-02-04]
-STOCKS = ["NVDA", "RKLB", "QQQM"]
-LINE_TOKEN = os.getenv('MmqnTse/qKOyGjJsX4scf/2GJIIuiIWdj5af1YqJiYXXGIw3wZMS5rW9QlpVS5buXV7YDxSqk9LlSCTX0gyyaNar03Ks6LpV5sClnaVo5xz19ewJfGTOgc2uH95lU6K3ab9IQfptbEVGVmJJyhJflwdB04t89/1O/w1cDnyilFU=')
-USER_ID = os.getenv('U0516ce932a17cd9201f385d753876c8e')
+# รายชื่อหุ้นในพอร์ตของเจมส์ [cite: 2026-02-04]
+STOCKS = ["NVDA", "ASML", "TSMC", "GOOGL", "QQQM", "JEPQ"]
+LINE_TOKEN = os.getenv('LINE_ACCESS_TOKEN')
+USER_ID = os.getenv('LINE_USER_ID')
+
+def calculate_rsi(series, period=14):
+    delta = series.diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+    rs = gain / loss
+    return 100 - (100 / (1 + rs))
 
 def get_rsi_report():
-    report = "💹 James's RSI Sentinel\n"
+    report = "💹 James's RSI Sentinel (Pure Pandas)\n"
     for s in STOCKS:
         try:
-            # ดึงข้อมูล Daily และคำนวณ RSI
-            df_d = yf.download(s, period="1y", interval="1d", progress=False)
-            rsi_d = ta.rsi(df_d['Close'], length=14).iloc[-1]
+            df = yf.download(s, period="1y", interval="1d", progress=False)
+            if df.empty: continue
             
-            # ดึงข้อมูล Weekly และคำนวณ RSI
-            df_w = yf.download(s, period="2y", interval="1wk", progress=False)
-            rsi_w = ta.rsi(df_w['Close'], length=14).iloc[-1]
+            # คำนวณ RSI วันล่าสุด
+            df['RSI'] = calculate_rsi(df['Close'])
+            rsi = df['RSI'].iloc[-1]
             
-            report += f"\n🔹 {s}\n   D: {rsi_d:.2f} | W: {rsi_w:.2f}"
+            report += f"\n🔹 {s}: {rsi:.2f}"
             
-            # สัญญาณแจ้งเตือนตามนโยบาย Buy-the-dip [cite: 2026-02-04]
-            if rsi_d < 35:
-                report += "\n   🚨 ALERT: OVERSOLD (Daily)!"
-            else:
-                report += "\n   ✅ Normal (Daily)"
+            # เงื่อนไข Buy-the-dip ตามนโยบาย [cite: 2026-02-04]
+            if rsi < 35:
+                report += " 🚨 BUY DIP!"
         except Exception as e:
             report += f"\n❌ {s}: Data Error"
             
@@ -46,9 +50,9 @@ def send_line(message):
 
 if __name__ == "__main__":
     if not LINE_TOKEN or not USER_ID:
-        print("❌ Error: Missing Environment Variables")
+        print("❌ Error: Missing LINE Secrets")
     else:
         msg = get_rsi_report()
-        print(msg) # ดูผลลัพธ์ใน GitHub Log
+        print(msg) # แสดงผลใน GitHub Log
         response = send_line(msg)
-        print(f"Status: {response.status_code}")
+        print(f"Status Code: {response.status_code}")
