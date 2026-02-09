@@ -29,6 +29,7 @@ def get_rsi_report():
                 report += "\n   ✅ Normal (Daily)"
         except Exception as e:
             report += f"\n❌ {s}: Data Error"
+            
     return report
 
 def send_line(message):
@@ -41,9 +42,13 @@ def send_line(message):
         "to": USER_ID,
         "messages": [{"type": "text", "text": message}]
     }
-    requests.post(url, json=payload, headers=headers)
+    return requests.post(url, json=payload, headers=headers)
 
 if __name__ == "__main__":
-    msg = get_rsi_report()
-    if LINE_TOKEN and USER_ID:
-        send_line(msg)
+    if not LINE_TOKEN or not USER_ID:
+        print("❌ Error: Missing Environment Variables")
+    else:
+        msg = get_rsi_report()
+        print(msg) # ดูผลลัพธ์ใน GitHub Log
+        response = send_line(msg)
+        print(f"Status: {response.status_code}")
