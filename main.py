@@ -31,6 +31,8 @@ def get_rsi_report():
             # เงื่อนไข Buy-the-dip ตามนโยบาย [cite: 2026-02-04]
             if rsi < 35:
                 report += " 🚨 BUY DIP!"
+            else:
+                report += " ✅"
         except Exception as e:
             report += f"\n❌ {s}: Data Error"
             
