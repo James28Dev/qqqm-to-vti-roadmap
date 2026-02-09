@@ -3,8 +3,8 @@ import pandas as pd
 import requests
 import os
 
-# รายชื่อหุ้นในพอร์ตของเจมส์ [cite: 2026-02-04]
-STOCKS = ["NVDA", "ASML", "TSMC", "GOOGL", "QQQM", "JEPQ"]
+# ลิสต์รายการหุ้นใหม่ [cite: 2026-02-10]
+STOCKS = ["NVDA", "RKLB", "QQQM"]
 LINE_TOKEN = os.getenv('LINE_ACCESS_TOKEN')
 USER_ID = os.getenv('LINE_USER_ID')
 
@@ -15,24 +15,34 @@ def calculate_rsi(series, period=14):
     rs = gain / loss
     return 100 - (100 / (1 + rs))
 
+def get_stock_data(symbol, interval="1d"):
+    period = "1y" if interval == "1d" else "2y"
+    df = yf.download(symbol, period=period, interval=interval, progress=False)
+    if not df.empty:
+        df['RSI'] = calculate_rsi(df['Close'])
+        return df['RSI'].iloc[-1]
+    return None
+
 def get_rsi_report():
-    report = "💹 James's RSI Sentinel (Pure Pandas)\n"
+    report = "🚀 James's Investment Sentinel (08:00 AM)\n"
     for s in STOCKS:
         try:
-            df = yf.download(s, period="1y", interval="1d", progress=False)
-            if df.empty: continue
+            rsi_day = get_stock_data(s, "1d")
+            rsi_week = get_stock_data(s, "1wk")
             
-            # คำนวณ RSI วันล่าสุด
-            df['RSI'] = calculate_rsi(df['Close'])
-            rsi = df['RSI'].iloc[-1]
+            if rsi_day is None or rsi_week is None: continue
             
-            report += f"\n🔹 {s}: {rsi:.2f}"
-            
-            # เงื่อนไข Buy-the-dip ตามนโยบาย [cite: 2026-02-04]
-            if rsi < 35:
-                report += " 🚨 BUY DIP!"
+            status = ""
+            # Logic: เช็คสัญญาณซื้อตามเงื่อนไขเจมส์ [cite: 2026-02-10]
+            if rsi_week <= 40 and rsi_day <= 35:
+                status = "🚨 สัญญาณ: **ต้องซื้อ!**"
+            elif rsi_week <= 45 and rsi_day <= 35:
+                status = "⚠️ สัญญาณ: เฝ้าระวัง"
             else:
-                report += " ✅"
+                status = "⏳ สัญญาณ: อาจจะยังนะ"
+            
+            report += f"\n📌 {s}\n- RSI Day: {rsi_day:.2f}\n- RSI Week: {rsi_week:.2f}\n{status}\n"
+            
         except Exception as e:
             report += f"\n❌ {s}: Data Error"
             
@@ -40,21 +50,11 @@ def get_rsi_report():
 
 def send_line(message):
     url = "https://api.line.me/v2/bot/message/push"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {LINE_TOKEN}"
-    }
-    payload = {
-        "to": USER_ID,
-        "messages": [{"type": "text", "text": message}]
-    }
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {LINE_TOKEN}"}
+    payload = {"to": USER_ID, "messages": [{"type": "text", "text": message}]}
     return requests.post(url, json=payload, headers=headers)
 
 if __name__ == "__main__":
-    if not LINE_TOKEN or not USER_ID:
-        print("❌ Error: Missing LINE Secrets")
-    else:
+    if LINE_TOKEN and USER_ID:
         msg = get_rsi_report()
-        print(msg) # แสดงผลใน GitHub Log
-        response = send_line(msg)
-        print(f"Status Code: {response.status_code}")
+        send_line(msg)

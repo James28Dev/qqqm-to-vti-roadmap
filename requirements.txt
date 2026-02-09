@@ -1,4 +1,0 @@
-yfinance>=0.2.31
-pandas>=2.0.0
-requests
-pandas_ta>=0.3.14b0
