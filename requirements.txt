@@ -1,4 +1,4 @@
-yfinance
-pandas
+yfinance>=0.2.31
+pandas>=2.0.0
 requests
-https://github.com/twopirllc/pandas-ta/archive/master.zip
+pandas_ta>=0.3.14b0
