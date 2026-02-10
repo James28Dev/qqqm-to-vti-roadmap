@@ -29,7 +29,7 @@ def get_stock_data(symbol, interval="1d"):
     return None
 
 def get_rsi_report():
-    report = "🚀 James's Investment Sentinel (08:00 AM)\n"
+    report = "🚀 James's Investment Sentinel\n"
     for s in STOCKS:
         try:
             rsi_day = get_stock_data(s, "1d")
