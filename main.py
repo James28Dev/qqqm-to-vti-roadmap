@@ -3,8 +3,8 @@ import pandas as pd
 import requests
 import os
 
-# ลิสต์รายการหุ้นใหม่ [cite: 2026-02-10]
-STOCKS = ["NVDA", "RKLB", "QQQM"]
+# ลิสต์รายการหุ้น
+STOCKS = ["NVDA", "RKLB"]
 LINE_TOKEN = os.getenv('LINE_ACCESS_TOKEN')
 USER_ID = os.getenv('LINE_USER_ID')
 
@@ -38,7 +38,7 @@ def get_rsi_report():
             if rsi_day is None or rsi_week is None: continue
             
             status = ""
-            # Logic: เช็คสัญญาณซื้อตามเงื่อนไขเจมส์ [cite: 2026-02-10]
+            # Logic: เช็คสัญญาณซื้อตามเงื่อนไข
             if rsi_week <= 40 and rsi_day <= 35:
                 status = "🚨 สัญญาณ: **ต้องซื้อ!**"
             elif rsi_week <= 45 and rsi_day <= 35:
@@ -46,7 +46,7 @@ def get_rsi_report():
             else:
                 status = "⏳ สัญญาณ: อาจจะยังนะ"
             
-            report += f"\n📌 {s}\n- RSI Day: {rsi_day:.2f}\n- RSI Week: {rsi_week:.2f}\n{status}\n"
+            report += f"\n📌 {s}\nRSI Day: {rsi_day:.2f} | RSI Week: {rsi_week:.2f}\n{status}\n"
             
         except Exception as e:
             report += f"\n❌ {s}: Data Error"
