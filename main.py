@@ -65,6 +65,19 @@ def send_line(message):
     payload = {"to": USER_ID, "messages": [{"type": "text", "text": message}]}
     return requests.post(url, json=payload, headers=headers)
 
+def send_pushbullet(title, body):
+    url = "https://api.pushbullet.com/v2/pushes"
+    headers = {
+        "Access-Token": PB_TOKEN,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "type": "note",
+        "title": title,
+        "body": body
+    }
+    return requests.post(url, json=payload, headers=headers)
+
 if __name__ == "__main__":
     # ส่งเข้า Line
     if LINE_TOKEN and USER_ID:
