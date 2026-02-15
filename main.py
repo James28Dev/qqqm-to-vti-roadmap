@@ -7,6 +7,7 @@ import os
 STOCKS = ["NVDA", "RKLB"]
 LINE_TOKEN = os.getenv('LINE_ACCESS_TOKEN')
 USER_ID = os.getenv('LINE_USER_ID')
+PB_TOKEN = os.getenv('PUSHBULLET_TOKEN')
 
 def calculate_rsi(series, period=14):
     delta = series.diff()
@@ -65,6 +66,11 @@ def send_line(message):
     return requests.post(url, json=payload, headers=headers)
 
 if __name__ == "__main__":
+    # ส่งเข้า Line
     if LINE_TOKEN and USER_ID:
         msg = get_rsi_report()
         send_line(msg)
+
+    # ส่งเข้า Pushbullet
+    if PB_TOKEN:
+        send_pushbullet("📈 James's RSI Alert", msg)
