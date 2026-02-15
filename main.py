@@ -13,7 +13,7 @@ def calculate_rsi(series, period=14):
     gain = (delta.where(delta > 0, 0))
     loss = (-delta.where(delta < 0, 0))
     
-    # สูตร Wilder's Smoothing (EWMA) ที่ Webull ใช้
+    # สูตร Wilder's Smoothing (EWMA)
     avg_gain = gain.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
     avg_loss = loss.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
     
@@ -37,14 +37,19 @@ def get_rsi_report():
             
             if rsi_day is None or rsi_week is None: continue
             
-            status = ""
-            # Logic: เช็คสัญญาณซื้อตามเงื่อนไข
-            if rsi_week <= 40 and rsi_day <= 35:
-                status = "🚨 สัญญาณ: **ต้องซื้อ!**"
+            status = ""              
+            # ปรับ Logic ให้คมขึ้นสำหรับคนไม่กลัวตกรถ
+            if rsi_week <= 40 and rsi_day <= 30:
+            # จุดนี้คือ Buy-the-dip > 20% ตามนโยบาย
+                status = "🚨 Sniper: FULL SEND! (ไม้ 3)"
             elif rsi_week <= 45 and rsi_day <= 35:
-                status = "⚠️ สัญญาณ: เฝ้าระวัง"
+            # จุดพักฐานใหญ่ที่เริ่มน่าสนใจ
+                status = "🔫 Sniper: ไม้ 1"
+            elif rsi_day <= 30:
+                # Week ยังไม่ลง แต่ Day ลงมาแรงมาก (Short-term Panic)
+                status = "⚡ Sniper: แหย่เท้า พอได้ซื้อ"
             else:
-                status = "⏳ สัญญาณ: อาจจะยังนะ"
+                status = "🚫 Sniper: กลับไปนอน"
             
             report += f"\n📌 {s}\nRSI Day: {rsi_day:.2f} | RSI Week: {rsi_week:.2f}\n{status}\n"
             
